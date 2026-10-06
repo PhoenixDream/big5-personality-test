@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>大五人格测试</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --text:#1d2330; --muted:#6b7280; --line:#e5e7eb; --soft:#f1f3f6;
+  --accent:#4f46e5; --accent-soft:#eef0ff; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+  --N:#e05a5a; --E:#e8a33d; --O:#8b5cf6; --A:#22a06b; --C:#2f80ed;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1218; --card:#181c25; --text:#e6e8ee; --muted:#9aa3b2; --line:#2a3040; --soft:#1f2430;
+    --accent:#8b8cf8; --accent-soft:#25284a; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --N:#f07a7a; --E:#f2b85c; --O:#a78bfa; --A:#3cc488; --C:#5b9cf5;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1218; --card:#181c25; --text:#e6e8ee; --muted:#9aa3b2; --line:#2a3040; --soft:#1f2430;
+  --accent:#8b8cf8; --accent-soft:#25284a; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --N:#f07a7a; --E:#f2b85c; --O:#a78bfa; --A:#3cc488; --C:#5b9cf5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.75 -apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px 16px calc(60px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.top h1{font-size:19px;margin:0;cursor:pointer}
+.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 16px;cursor:pointer;min-height:42px;touch-action:manipulation}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.small{padding:4px 10px;font-size:13px;border-radius:8px;min-height:32px}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.card h2{font-size:17px;margin:0 0 8px}
+.card h3{font-size:15px;margin:14px 0 6px}
+.muted{color:var(--muted)} .small{font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+input[type=text],select{font:inherit;color:var(--text);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
+input[type=text]{flex:1}
+.hidden{display:none !important}
+/* 首页 */
+.dims{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.dim{border-radius:10px;padding:10px 12px;background:var(--soft);border-left:4px solid var(--c)}
+.dim b{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:8px 0 4px}
+.stat{background:var(--soft);border-radius:10px;padding:10px 12px}
+.stat .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--muted)}
+.store-ok{color:var(--ok)} .store-warn{color:var(--warn)}
+.hlist{display:grid;gap:8px;margin-top:10px}
+.hitem{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:var(--card)}
+.hitem:hover{border-color:var(--accent)}
+.hitem .idx{font-size:12px;color:var(--muted);min-width:34px}
+.hitem .main{flex:1;min-width:0}
+.hitem .t{font-weight:600}
+.hitem .bars{display:flex;gap:4px;margin-top:4px}
+.hitem .bars span{flex:1;height:6px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.hitem .bars span i{position:absolute;left:0;top:0;bottom:0;background:var(--c)}
+.hitem .code{font-weight:800;color:var(--accent);font-size:15px}
+/* 答题 */
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden;margin:6px 0 2px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.qmeta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);gap:8px}
+.qbox{min-height:150px;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:22px 6px 14px}
+.qno{font-size:13px;color:var(--muted)}
+.qno .edited{color:var(--accent)}
+.qtext{font-size:24px;font-weight:600;margin:8px 0 4px;line-height:1.5}
+.qen{font-size:13px;color:var(--muted);min-height:1em}
+.qhint{font-size:13px;color:var(--muted);margin-bottom:10px;text-align:center}
+.opts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.opt{font:inherit;border:1.5px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .12s;touch-action:manipulation}
+.opt:hover{border-color:var(--accent)}
+.opt .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font-weight:700;flex:none}
+.opt .t{font-size:13px;line-height:1.3}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt.on .n{background:var(--accent);color:#fff}
+.qtools{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.qtools label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer}
+.qnav{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-top:16px}
+.qnav .mid{font-size:13px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.qnav #nextBtn{justify-self:end}
+.grid120{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin-top:16px}
+.grid120 button{border:0;padding:0;height:18px;border-radius:3px;background:var(--soft);cursor:pointer}
+.grid120 button.done{background:var(--accent);opacity:.5}
+.grid120 button.cur{outline:2px solid var(--accent);outline-offset:1px;opacity:1}
+/* 结果 */
+.res-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.res-head h2{margin:0}
+.bigcode{font-size:28px;font-weight:800;letter-spacing:2px;color:var(--accent);line-height:1.2}
+.summary{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-top:12px}
+.chart{width:100%;height:380px}
+details.learn{border:1px solid var(--line);border-radius:12px;padding:0 14px;margin:8px 0;background:var(--card)}
+details.learn summary{cursor:pointer;padding:12px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between}
+details.learn summary::after{content:"展开";color:var(--muted);font-weight:400;font-size:13px}
+details.learn[open] summary::after{content:"收起"}
+details.learn summary::-webkit-details-marker{display:none}
+details.learn .body{padding-bottom:12px}
+details.learn p{margin:6px 0}
+.mapping{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+.mapping th,.mapping td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+.domain{border-left:4px solid var(--c);padding:14px 16px;border-radius:12px;background:var(--soft);margin-bottom:14px}
+.domain .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.domain .nm{font-weight:700;font-size:17px}
+.domain .sc{font-variant-numeric:tabular-nums}
+.lvl{font-size:12px;border-radius:999px;padding:1px 9px;background:var(--c);color:#fff;margin-left:6px;white-space:nowrap}
+.meter{height:10px;background:var(--line);border-radius:999px;margin:8px 0 2px;position:relative;overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;background:var(--c);border-radius:999px}
+.meter b{position:absolute;top:0;bottom:0;width:1px;background:var(--card)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.domain .def{margin:8px 0 4px}
+.domain .you{background:var(--card);border-radius:10px;padding:10px 12px;margin:8px 0}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}
+.cols>div{background:var(--card);border-radius:10px;padding:10px 12px}
+.cols h4{margin:0 0 4px;font-size:13px}
+.cols ul{margin:0;padding-left:18px;font-size:13px}
+.cols li{margin:2px 0}
+.facets{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px 18px;margin-top:10px}
+.facet{font-size:13px}
+.facet .fh{display:flex;justify-content:space-between;gap:6px}
+.facet .fm{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:2px}
+.facet .fm i{display:block;height:100%;background:var(--c);opacity:.8}
+.facet .fd{color:var(--muted);font-size:12px;margin-top:2px}
+.spread{font-size:13px;margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--card);border:1px dashed var(--line)}
+.hl{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hl .it{border-left:3px solid var(--c);padding:6px 10px;margin:6px 0;background:var(--soft);border-radius:6px;font-size:13px}
+.combo{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+.combo .tg{display:inline-block;font-size:12px;border-radius:6px;padding:0 6px;margin-right:6px;background:var(--soft)}
+.qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.qa .it{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:13px}
+.qa .it b{display:block;font-size:16px}
+.note li{margin:3px 0;font-size:13px;color:var(--muted)}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+.toast.show{opacity:.92}
+@media (max-width:640px){
+  .wrap{padding:12px 12px calc(96px + env(safe-area-inset-bottom))}
+  .top h1{font-size:17px}
+  .card{padding:14px;border-radius:12px}
+  .qbox{min-height:120px;padding:14px 2px 10px}
+  .qtext{font-size:20px}
+  .opts{grid-template-columns:1fr;gap:7px}
+  .opt{flex-direction:row;justify-content:flex-start;padding:11px 14px;gap:12px;min-height:50px}
+  .opt .t{font-size:15px}
+  .grid120{grid-template-columns:repeat(12,1fr)}
+  .grid120 button{height:22px}
+  /* 手机端：上一题 / 下一题固定在底部 */
+  .qnav{position:fixed;left:0;right:0;bottom:0;margin:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+  .qnav .btn{min-height:46px}
+  .cols{grid-template-columns:1fr}
+  .hl{grid-template-columns:1fr}
+  .chart{height:320px}
+  .bigcode{font-size:22px}
+}
+@media print{
+  .top button,.actions,.qtools,#cmpRow,.toast{display:none !important}
+  body{background:#fff}
+  .card{break-inside:avoid;border-color:#ddd}
+  details.learn{border:0} details.learn .body{display:block}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 id="homeLink">大五人格测试 · IPIP-NEO-120</h1>
+    <button class="btn small" id="themeBtn">明 / 暗</button>
+  </div>
+
+  <!-- ===================== 首页 ===================== -->
+  <section id="v-home">
+    <div class="card">
+      <h2>关于这个测试</h2>
+      <p style="margin:4px 0">共 <b>120</b> 道题，大约需要 15–20 分钟。题目没有对错之分，请按<b>你平时真实的样子</b>作答，而不是你希望成为的样子。</p>
+      <p class="muted small" style="margin:4px 0">题目来自公开的 IPIP-NEO-120（Johnson, 2014），测量五个人格维度及其 30 个子维度。所有作答和结果只保存在本机浏览器中，不会上传到任何地方。</p>
+      <div class="dims" id="dimIntro"></div>
+      <div class="row"><input type="text" id="nick" placeholder="昵称（可选，用于区分多次测试）" maxlength="20"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="startBtn">开始测试</button>
+        <button class="btn hidden" id="resumeBtn">继续上次的进度</button>
+        <span class="muted small" id="resumeInfo"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row between"><h2 style="margin:0">本机记录</h2><span class="small" id="storeStatus"></span></div>
+      <div class="stats" id="stats"></div>
+      <div id="trendWrap" class="hidden"><h3>五维变化趋势</h3><div class="chart" id="trend" style="height:300px"></div></div>
+      <div class="row between" style="margin-top:12px">
+        <h3 style="margin:0">历史结果</h3>
+        <div class="row">
+          <button class="btn small" id="exportBtn">导出备份</button>
+          <label class="btn small" style="display:inline-flex;align-items:center">导入备份<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+        </div>
+      </div>
+      <div class="hlist" id="hlist"></div>
+      <p class="muted small" id="histEmpty">还没有完成的测试。</p>
+      <p class="muted small" style="margin-bottom:0">提示：数据保存在<b>当前浏览器</b>里。请不要使用无痕/隐私模式，也不要清除浏览器的网站数据；换浏览器或换电脑前，请先"导出备份"。</p>
+    </div>
+  </section>
+
+  <!-- ===================== 答题 ===================== -->
+  <section id="v-quiz" class="hidden">
+    <div class="card">
+      <div class="qmeta"><span id="qMode"></span><span id="qSaved"></span></div>
+      <div class="progress"><i id="qBar"></i></div>
+      <div class="qbox">
+        <div class="qno" id="qNo"></div>
+        <div class="qtext" id="qText"></div>
+        <div class="qen" id="qEn"></div>
+      </div>
+      <div class="qhint">这句话在多大程度上符合你？</div>
+      <div class="opts" id="opts"></div>
+      <div class="qtools">
+        <label><input type="checkbox" id="autoAdv" checked> 新题作答后自动下一题</label>
+        <label><input type="checkbox" id="showEnChk"> 显示英文原题</label>
+        <button class="btn small" id="jumpBtn">跳到未答题</button>
+      </div>
+      <div class="grid120" id="grid120" title="点击可跳转到对应题目"></div>
+      <div class="row" style="justify-content:center;margin-top:16px">
+        <button class="btn primary" id="finishBtn" disabled>查看结果</button>
+      </div>
+      <p class="muted small" style="text-align:center;margin:10px 0 0">电脑上可用键盘 1–5 作答，← → 切换题目。点击上方小方格可以跳到任意一题修改。</p>
+      <div class="qnav">
+        <button class="btn" id="prevBtn">‹ 上一题</button>
+        <div class="mid" id="qPos"></div>
+        <button class="btn" id="nextBtn">下一题 ›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 结果 ===================== -->
+  <section id="v-result" class="hidden">
+    <div class="card">
+      <div class="res-head">
+        <div><h2 id="rTitle">测试结果</h2><div class="muted small" id="rMeta"></div></div>
+        <div style="text-align:right"><div class="muted small">近似 16Personalities 代码</div><div class="bigcode" id="rCode"></div></div>
+      </div>
+      <div class="summary" id="rSummary"></div>
+    </div>
+
+    <div class="card">
+      <div class="row between" id="cmpRow">
+        <h2 style="margin:0">五大维度概览</h2>
+        <div class="row small"><span class="muted">对比：</span><select id="cmpSel"></select></div>
+      </div>
+      <div class="chart" id="radar"></div>
+      <p class="muted small" style="margin:0">分数为 0–100 的量表百分比分数；35 分以下记为"偏低"，65 分以上记为"偏高"，中间为"中等"。</p>
+    </div>
+
+    <div class="card" id="learnCard"></div>
+    <div class="card" id="domainCards"></div>
+    <div class="card" id="highlights"></div>
+    <div class="card" id="combos"></div>
+    <div class="card" id="quality"></div>
+
+    <div class="card">
+      <h2>30 个子维度一览</h2>
+      <div class="chart" id="facetChart" style="height:780px"></div>
+    </div>
+
+    <div class="card">
+      <h2>解读须知</h2>
+      <ul class="note" style="padding-left:18px;margin:0">
+        <li>0–100 分是"量表百分比分数"，<b>不是百分位</b>，不代表"超过了多少人"。本页没有附带中文常模，"偏低 / 中等 / 偏高"是按 35 / 65 分粗略划分的。</li>
+        <li>五个维度都没有绝对的好坏，每一端都有适应和不适应的情境。"神经质"是心理学术语，指情绪敏感性，不是"神经病"。</li>
+        <li>第 28、88 题（政治立场）和第 118 题（严惩犯罪）是按欧美语境编写的，在中文语境下可能不太贴切，会影响"自由主义"子维度的准确度。</li>
+        <li>16Personalities 代码的换算方式：外向性 → E/I，开放性 → N/S，宜人性 → F/T，尽责性 → J/P，神经质 → -T/-A，均以 50 分为界。这只是近似对应，不等于正式的 MBTI® 结果。</li>
+        <li>自评结果会受当时心情、自我认知和"希望自己是什么样"的影响。本测试仅供自我了解，不能用于临床诊断，也不应作为招聘或筛选的唯一依据。如果长期情绪困扰影响到生活，请寻求专业心理咨询或医疗帮助。</li>
+      </ul>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="backHome">返回首页</button>
+      <button class="btn" id="editBtn">修改答案</button>
+      <button class="btn" id="printBtn">打印 / 存为 PDF</button>
+      <button class="btn primary" id="retakeBtn">重新测试</button>
+      <button class="btn danger" id="delBtn">删除这条结果</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== 题目（IPIP-NEO-120）=====================
+const ITEMS = [
+["为很多事情感到担心","Worry about things."],["很容易交到朋友","Make friends easily."],["有丰富的想象力","Have a vivid imagination."],["信任其他人","Trust others."],["能成功完成任务","Complete tasks successfully."],
+["很容易生气","Get angry easily."],["喜欢参加大型聚会","Love large parties."],["认为艺术是很重要的","Believe in the importance of art."],["会利用他人来达成自己的目的","Use others for my own ends."],["喜欢整洁","Like to tidy up."],
+["时常感到忧郁","Often feel blue."],["承担责任","Take charge."],["能强烈感受到自己的情绪","Experience my emotions intensely."],["乐于帮助他人","Love to help others."],["信守承诺","Keep my promises."],
+["感觉自己很难接近别人","Find it difficult to approach others."],["总是很忙碌","Am always busy."],["相比墨守成规，我更喜欢有变化","Prefer variety to routine."],["喜欢和别人比试","Love a good fight."],["工作努力","Work hard."],
+["大吃大喝寻欢作乐","Go on binges."],["喜欢追求刺激","Love excitement."],["喜欢阅读有挑战性的材料","Love to read challenging material."],["相信自己比别人更好","Believe that I am better than others."],["我总是有所准备","Am always prepared."],
+["容易慌张","Panic easily."],["我的快乐会感染周围的人","Radiate joy."],["认为自己在政治方面非常自由开放","View myself as predominantly liberal politically."],["同情流浪汉","Sympathize with the homeless."],["会不经过思考就开始行动","Jump into things without thinking."],
+["担心会发生最糟糕的情况","Fear for the worst."],["和其他人待在一起时，我觉得很自在","Feel comfortable around people."],["喜欢天马行空地幻想","Enjoy wild flights of fantasy."],["相信他人的出发点是好的","Believe that others have good intentions."],["在自己所从事的领域出类拔萃","Excel in what I do."],
+["容易被激怒","Get irritated easily."],["在聚会上，我会和很多不同的人交谈","Talk to a lot of different people at parties."],["我能发现别人看不到的美","See beauty in things that others might not notice."],["为了领先别人，我会采用作弊的方式","Cheat to get ahead."],["经常忘记把东西放回原处","Often forget to put things back in their proper place."],
+["不喜欢自己","Dislike myself."],["我会尝试去领导他人","Try to lead others."],["能感受到他人的情绪","Feel others' emotions."],["关心他人","Am concerned about others."],["我会实话实说","Tell the truth."],
+["害怕引起他人的注意","Am afraid to draw attention to myself."],["总是在奔波","Am always on the go."],["我更喜欢做自己熟悉的事情","Prefer to stick with things that I know."],["会冲人大喊大叫","Yell at people."],["我会超出预期地完成任务或工作","Do more than what's expected of me."],
+["很少过度放纵自己","Rarely overindulge."],["喜欢冒险","Seek adventure."],["会避免参与关于哲学的讨论","Avoid philosophical discussions."],["觉得自己很了不起","Think highly of myself."],["能执行自己制定的计划","Carry out my plans."],
+["感到被各种事情压得喘不过气来","Become overwhelmed by events."],["我的生活很快乐","Have a lot of fun."],["相信没有绝对的对错之分","Believe that there is no absolute right or wrong."],["我同情那些处境不如自己的人","Feel sympathy for those who are worse off than myself."],["会做出草率的决定","Make rash decisions."],
+["对很多事情感到害怕","Am afraid of many things."],["避免和他人接触","Avoid contacts with others."],["喜欢做白日梦","Love to daydream."],["相信他人说的话","Trust what people say."],["能轻松完成任务","Handle tasks smoothly."],
+["发脾气","Lose my temper."],["更喜欢一个人独处","Prefer to be alone."],["不喜欢诗歌","Do not like poetry."],["占别人的便宜","Take advantage of others."],["我的房间很乱","Leave a mess in my room."],
+["经常情绪低落","Am often down in the dumps."],["掌控局面","Take control of things."],["很少察觉到自己的情绪反应","Rarely notice my emotional reactions."],["对他人的感受漠不关心","Am indifferent to the feelings of others."],["破坏规则","Break rules."],
+["只有和朋友在一起的时候我才会感到自在","Only feel comfortable with friends."],["我的闲暇时间非常充实","Do a lot in my spare time."],["不喜欢改变","Dislike changes."],["侮辱他人","Insult people."],["在工作或学习上，我不会多做，过得去就行","Do just enough work to get by."],
+["能轻松抵御诱惑","Easily resist temptations."],["喜欢不计后果地行事","Enjoy being reckless."],["理解抽象概念对我来说有些困难","Have difficulty understanding abstract ideas."],["对自己的评价很高","Have a high opinion of myself."],["浪费时间","Waste my time."],
+["感觉自己处理事情力不从心","Feel that I'm unable to deal with things."],["热爱生活","Love life."],["我在政治上比较保守","View myself as predominantly conservative politically."],["对别人遇到的麻烦事不感兴趣","Am not interested in other people's problems."],["仓促行事","Rush into things."],
+["我很容易觉得压力大","Get stressed out easily."],["和他人保持距离","Keep others at a distance."],["喜欢陷入沉思","Like to get lost in thought."],["不相信别人","Distrust people."],["知道如何完成任务","Know how to get things done."],
+["不会轻易被惹恼","Am not easily annoyed."],["避开人多的地方","Avoid crowds."],["不喜欢去美术馆","Do not enjoy going to art museums."],["给别人使坏","Obstruct others' plans."],["我的东西放得到处都是","Leave my belongings around."],
+["对自己感到满意","Feel comfortable with myself."],["等着别人来带头","Wait for others to lead the way."],["不理解那些情绪化的人","Don't understand people who get emotional."],["不愿为他人花费时间","Take no time for others."],["违背自己的承诺","Break my promises."],
+["不会被复杂的社交情境所困扰","Am not bothered by difficult social situations."],["喜欢慢慢来","Like to take it easy."],["我喜欢传统的方式","Am attached to conventional ways."],["报复别人","Get back at others."],["对工作或学业不怎么投入时间和精力","Put little time and effort into my work."],
+["可以控制自己的欲望","Am able to control my cravings."],["我的行为狂放不羁","Act wild and crazy."],["对理论性的讨论不感兴趣","Am not interested in theoretical discussions."],["吹嘘自己的美德","Boast about my virtues."],["拖很久才开始做一件事","Have difficulty starting tasks."],
+["在压力下能保持冷静","Remain calm under pressure."],["看到生活中好的一面","Look at the bright side of life."],["认为我们应该严惩犯罪","Believe that we should be tough on crime."],["我尽量不去想那些需要帮助的人","Try not to think about the needy."],["做事不经过思考","Act without thinking."]
+];
+const OPTIONS = ["非常不准确","比较不准确","适中","比较准确","非常准确"];
+
+// 反向计分题（IPIP-NEO-120 计分键）
+const REVERSED = new Set([
+  51,81,96,101,106,111,116,
+  62,67,92,97,102,107,
+  48,53,68,73,78,83,88,98,103,108,113,118,
+  9,19,24,39,49,54,69,74,79,84,89,94,99,104,109,114,119,
+  30,40,60,70,75,80,85,90,100,105,110,115,120
+]);
+const DOMAIN_ORDER = ["N","E","O","A","C"];   // 题号 i → 维度 (i-1)%5；子维度 floor(((i-1)%30)/5)
+
+// ===================== 解读内容 =====================
+const DOMAINS = {
+  N: { name:"神经质", en:"Neuroticism", sub:"情绪敏感性",
+    def:"指体验负面情绪（焦虑、愤怒、沮丧、羞怯）的倾向，以及面对压力时情绪反应的强度。它的反面是\"情绪稳定性\"。",
+    why:"神经质是预测心理健康和主观幸福感最有力的人格因素之一，与焦虑、抑郁等情绪困扰以及压力相关的身体问题都有关联。它同时也意味着对风险和问题更敏感，这种敏感在某些情境下是有用的。",
+    hi:{ sum:"你对情绪和环境中的压力信号比较敏感，负面情绪来得较快、较强，持续时间也可能较长。遇到不确定或不顺利的事情时，你容易担心、紧张或自我怀疑。",
+      str:["对风险和潜在问题警觉，常能提前发现隐患","情感体验细腻，往往也更能体会他人的感受","因为担心出错，做事前倾向于考虑周全"],
+      watch:["容易反复思考负面事件（反刍），消耗精力","压力大时表现可能波动，出现回避或拖延","容易放大负面反馈，对批评比较在意"],
+      tips:["规律运动和充足睡眠对降低负面情绪有稳定的研究证据，是成本最低的调节方式","尝试\"认知重评\"：情绪上来时问自己\"还有没有别的解释？\"","给担心设定固定的时间段，例如每天 15 分钟，其余时间察觉到担心时就先记下来","如果低落或焦虑持续两周以上并影响生活，请考虑寻求专业心理帮助"] },
+    mid:{ sum:"你的情绪稳定性处于中等水平：多数时候比较平稳，压力较大或遇到重要事情时，也会出现明显的紧张或低落，但通常能逐渐恢复。",
+      str:["既能感知风险，又不会被情绪长期困住","情绪反应与情境大体相称"],
+      watch:["在多重压力叠加时，情绪波动可能会明显上升"],
+      tips:["留意自己在什么情境下最容易情绪失衡，提前准备应对方式","保持基本的作息和运动习惯，作为情绪的\"缓冲垫\""] },
+    lo:{ sum:"你情绪平稳、抗压能力强，很少长时间陷入焦虑或低落，面对突发状况和批评时通常能保持冷静。",
+      str:["压力和危机中能保持冷静，是团队里的\"稳定器\"","情绪恢复快，不容易被挫折拖住","能比较客观地看待批评"],
+      watch:["可能低估风险，准备不足","对他人的焦虑和脆弱不够敏感，容易被认为\"不太共情\""],
+      tips:["在重要决策中加入\"风险检查\"这一步，主动想想最坏情况","当别人情绪激动时，先表达理解，再讨论解决方案"] },
+    facets:[
+      ["焦虑","容易担心、紧张、预感坏事发生","经常担心，容易预想最坏的结果","很少无端担心，面对不确定性比较放松"],
+      ["愤怒","容易被激怒、烦躁或发脾气","遇到不顺或不公时容易烦躁、发火","不易被激怒，脾气平和"],
+      ["抑郁","容易低落、悲伤、自我否定","容易情绪低落、自我否定、缺乏动力","很少陷入低落，对自己比较满意"],
+      ["自我意识","社交中容易害羞、尴尬、在意评价","在人前容易拘谨，担心被别人评价","在人前从容，不太在意别人的眼光"],
+      ["无节制","难以抵御冲动和诱惑","较难抵抗饮食、消费、娱乐等诱惑","能控制欲望，不易放纵"],
+      ["脆弱","压力下容易慌乱、无助","压力大时容易慌乱，觉得应付不来","压力下也能保持冷静，处理危机的能力强"]] },
+  E: { name:"外向性", en:"Extraversion", sub:"社交与活力",
+    def:"指从社交互动和外部刺激中获得能量的程度，包括热情、合群、自信果断、活力、寻求刺激和积极情绪。",
+    why:"外向性与积极情绪、社交网络规模、在团队中\"自然成为领导者\"的可能性，以及销售、管理等需要人际影响力的工作表现相关。内向并不等于害羞或不善社交，更多是对刺激的偏好和能量来源不同。",
+    hi:{ sum:"你喜欢与人交往，精力充沛，乐于表达和带动气氛，在热闹、有互动的环境中状态最好。",
+      str:["善于建立关系、拓展人脉","表达和影响力强，适合需要沟通协调的角色","积极情绪多，能感染他人"],
+      watch:["可能说得多、听得少，忽略他人的意见","追求刺激时容易冲动","长时间独处或做单调工作时容易无聊"],
+      tips:["在讨论中刻意练习\"先听完再说\"，多提问","重要决定前给自己一个冷静期","把需要专注的独立工作切成小块，穿插一些社交时间"] },
+    mid:{ sum:"你在社交与独处之间比较平衡（常被称为\"中间性格\"），既能投入社交场合，也需要一定的独处时间，可以根据情境调整状态。",
+      str:["适应面广，既能与人合作，也能独立工作","能在表达和倾听之间切换"],
+      watch:["可能不太清楚自己真正的能量来源，容易被环境推着走"],
+      tips:["观察做完什么事后你感到充电，做完什么事后感到疲惫，据此安排节奏"] },
+    lo:{ sum:"你更偏好安静、独处或小范围的深度交往，说话做事比较克制，社交之后需要时间恢复精力。这并不代表不友善或社交能力差。",
+      str:["专注力强，适合需要深度思考的独立工作","善于倾听，容易建立一对一的深度关系","行事沉稳，不易冲动"],
+      watch:["在需要主动表达的场合可能吃亏，贡献容易被忽视","可能被误解为冷淡或不合群","可能错过一些社交带来的机会"],
+      tips:["开会前先准备好要点，争取尽早发言一次","选择适合自己的社交形式，例如小聚、一对一、书面沟通","在社交密集的日子后，主动为自己预留恢复时间"] },
+    facets:[
+      ["友善","对人热情，容易建立关系","待人热情，容易与人亲近","与人保持一定距离，熟悉之后才热络"],
+      ["合群","喜欢人多热闹的场合","喜欢人多热闹的场合","偏好独处或小圈子，避开人群"],
+      ["自信果断","敢于表达、主导局面","敢于表达意见，愿意带头和主导","倾向于跟随，不爱出头"],
+      ["活跃程度","生活节奏快，精力旺盛","生活节奏快，闲不下来","喜欢从容、慢节奏"],
+      ["寻求刺激","喜欢冒险、新鲜和兴奋感","喜欢冒险、新鲜和强烈刺激","偏好安全平静，不爱冒险"],
+      ["愉悦","常体验快乐和热情","经常感到快乐和热情，乐观","情绪表达较平淡，不常兴高采烈（不等于不快乐）"]] },
+  O: { name:"开放性", en:"Openness to Experience", sub:"好奇与想象",
+    def:"指对新经验、新想法、艺术与情感的接纳和好奇程度，包括想象力、审美、情绪觉察、求新、智识兴趣和价值观上的开放。",
+    why:"开放性与创造力、学习兴趣、对复杂问题的投入程度相关，也与适应变化的意愿和价值观有关。它与智力有一定关联，但并不等同于聪明。",
+    hi:{ sum:"你好奇心强，想象力丰富，喜欢新鲜事物和抽象思考，容易被艺术和美打动，也愿意接受非传统的观点。",
+      str:["创意多，善于跨领域联想","学习新事物快，喜欢有挑战性的问题","对审美和情感体验敏锐"],
+      watch:["新想法太多，容易分散精力，落地不足","对重复性、程序化的工作缺乏耐心","有时显得不够务实，或与偏传统的人难以沟通"],
+      tips:["用清单和截止日期把好的想法\"收口\"，一次只推进少数几个","寻找有探索空间的工作或项目","与务实型的伙伴搭档，互相补位"] },
+    mid:{ sum:"你既能接受新事物，也重视实际和经验，会在\"尝试新方法\"和\"沿用成熟做法\"之间权衡。",
+      str:["兼顾创新与务实","能与不同风格的人沟通"],
+      watch:["在需要大胆突破的场合，可能偏于保守"],
+      tips:["在熟悉的领域，有意识地尝试一项小的新做法，并观察效果"] },
+    lo:{ sum:"你务实、脚踏实地，偏好熟悉、具体、可预期的事物，重视传统和经验，对空泛的理论讨论兴趣不大。",
+      str:["务实可靠，善于把成熟方法执行到位","立场稳定，不容易被潮流左右","专注于具体问题和实际结果"],
+      watch:["面对变化时适应可能较慢","可能错过更好的新方法","在讨论抽象议题时容易失去耐心"],
+      tips:["定期尝试一件小的新事物，例如新书、新路线、新工具","面对变化时，先弄清楚\"为什么要变\"，再决定怎么做"] },
+    facets:[
+      ["想象力","喜欢幻想、沉思，内心世界丰富","爱幻想、爱沉思，内心世界丰富","关注现实，较少做白日梦"],
+      ["艺术兴趣","欣赏艺术与美","欣赏艺术与美，容易被审美体验打动","对艺术、诗歌兴趣不大"],
+      ["情绪丰富性","细致觉察和重视情绪","能细致觉察并重视自己和他人的情绪","较少关注情绪，偏理性"],
+      ["求新","喜欢变化和新体验","喜欢变化和新体验","偏好熟悉的方式和惯例"],
+      ["智识","喜欢抽象、理论和哲学思考","喜欢抽象思考和理论讨论","偏好具体实际的问题，不爱空谈理论"],
+      ["自由主义","愿意挑战权威与传统","价值观较开放，愿意挑战权威与传统","重视传统、秩序和规则"]] },
+  A: { name:"宜人性", en:"Agreeableness", sub:"合作与关怀",
+    def:"指在人际关系中表现出的信任、真诚、利他、合作、谦逊和同情心的程度。",
+    why:"宜人性与人际关系质量、团队合作和亲社会行为相关，高宜人性的人通常更受信任、冲突更少。但在需要谈判、竞争或提出尖锐意见的场合，宜人性过高有时反而不利，例如在薪资谈判中。",
+    hi:{ sum:"你信任他人，乐于合作和帮助别人，待人真诚谦和，重视人际和谐，倾向于避免冲突。",
+      str:["容易获得信任，人际关系融洽","善于合作和调解冲突","关怀他人，富有同理心"],
+      watch:["难以拒绝，容易承担过多","可能回避必要的冲突或批评","有时把他人需求放在自己之前，导致心累或被利用"],
+      tips:["练习温和而坚定地表达自己的需求，学会说\"不\"","分清\"友善\"和\"讨好\"：帮助别人前先确认自己是否愿意","在谈判前先写下自己的底线"] },
+    mid:{ sum:"你在合作与坚持己见之间比较平衡，一般情况下友善随和，但在原则问题上也能坚持立场，会视情况选择信任或保持警惕。",
+      str:["既能合作，也能在必要时提出不同意见"],
+      watch:["在关系和原则冲突时，可能会犹豫不决"],
+      tips:["事先想清楚哪些事情可以让步，哪些必须坚持"] },
+    lo:{ sum:"你更具独立性和竞争性，对他人的动机持审慎态度，直言不讳，更看重自己的判断和利益。",
+      str:["敢于提出批评和不同意见","在谈判和竞争中不易让步","不轻信他人，不容易被利用"],
+      watch:["可能显得强硬、冷淡，容易引发人际摩擦","在团队中可能影响信任与合作氛围","可能低估关系对长期目标的作用"],
+      tips:["提出批评前，先肯定对方做得好的部分","合作时多问一句\"你最在意的是什么？\"","有意识地维护几段重要的长期关系"] },
+    facets:[
+      ["信任","相信他人善意、诚实","倾向于相信别人是善意、诚实的","对他人的动机保持警惕和怀疑"],
+      ["坦诚守德","真诚直率，不操纵他人","真诚直率，不操纵、不欺骗他人","为达目的会更灵活，可能会使用一些手段"],
+      ["利他","乐于为他人付出","乐于为他人付出时间和精力","更优先照顾自己的事务"],
+      ["合作","避免冲突，不咄咄逼人","避免冲突，宁可退让","好胜，愿意正面对抗"],
+      ["谦虚","不自夸，不自视过高","低调、不自夸","自信甚至自视较高，乐于展示自己"],
+      ["同情心","关心弱势者","容易被他人的困境打动","更理性、冷静地看待他人的困境"]] },
+  C: { name:"尽责性", en:"Conscientiousness", sub:"自律与条理",
+    def:"指自我控制、计划组织、责任心和追求目标的程度，包括自我效能、条理、尽职、追求成就、自律和审慎。",
+    why:"在大五人格中，尽责性是预测工作绩效和学业成绩最稳定的因素，在几乎所有职业中都成立。它还与健康行为、财务状况和寿命相关。",
+    hi:{ sum:"你有条理、自律、可靠，目标明确，做事有计划，并且能坚持把事情完成。",
+      str:["可靠守信，值得托付","执行力强，善于规划和坚持","重视质量和细节"],
+      watch:["可能陷入完美主义，过度工作","计划被打乱时容易焦虑，不够灵活","对自己和他人的要求可能过高"],
+      tips:["给计划预留弹性时间","区分\"足够好\"和\"完美\"，不同任务设定不同标准","把休息也写进日程"] },
+    mid:{ sum:"你在计划性与灵活性之间比较平衡：重要的事情会认真对待、按计划推进，小事则比较随意。",
+      str:["既能按计划做事，也能随机应变"],
+      watch:["在缺乏外部约束时，可能会拖延"],
+      tips:["对重要目标使用明确的截止日期和检查点"] },
+    lo:{ sum:"你随性灵活，不喜欢被计划和规则束缚，更能随机应变，但也可能更容易拖延、分心，或遗漏细节。",
+      str:["灵活，适应变化快","不拘泥于规则，能享受当下","在混乱或临时的情况下也能应对"],
+      watch:["容易拖延，难以坚持长期目标","可能遗漏细节或错过截止日期","承诺有时难以兑现，影响他人的信任"],
+      tips:["把大任务拆成 15–30 分钟就能完成的小步骤","借助外部约束：截止日期、搭档、提醒","通过设计环境减少诱惑，例如工作时把手机放到另一个房间"] },
+    facets:[
+      ["自我效能","相信自己能把事情做好","相信自己有能力把事情做好","对自己的能力缺乏把握"],
+      ["条理性","整洁有序，物品井井有条","整洁有序，喜欢有条理","不太在意整理，环境较随意"],
+      ["尽职","重承诺，守规则","信守承诺，遵守规则","对规则和承诺比较灵活"],
+      ["追求成就","设定高目标并努力实现","目标高，肯努力","满足于\"够用就好\""],
+      ["自律","克服拖延，坚持完成","能克服拖延，坚持把任务完成","容易拖延，迟迟不能开始"],
+      ["审慎","三思而后行","三思而后行","行动快，较冲动"]] }
+};
+
+// 维度组合解读（阈值 60 / 40）
+const COMBOS = [
+  { when:s => s.N >= 60 && s.C <= 40, t:"情绪敏感 × 自控较弱", tags:["N 高","C 低"],
+    d:"压力来时容易焦虑，同时较难靠自律推进任务，容易形成\"压力 → 拖延 → 更大压力\"的循环。",
+    tip:"先处理情绪再处理任务：做几分钟深呼吸或短暂散步，然后只要求自己完成第一个最小步骤；借助截止日期、搭档等外部结构。" },
+  { when:s => s.N >= 60 && s.C >= 60, t:"焦虑型尽责", tags:["N 高","C 高"],
+    d:"标准高、怕出错，往往准备得非常充分。这种组合常常带来出色的工作质量，有研究称之为\"健康的神经质\"，但也容易导致完美主义和过度消耗。",
+    tip:"为不同任务设定不同的\"合格线\"；把\"已经足够好\"当作一个明确的完成标准。" },
+  { when:s => s.N <= 40 && s.E >= 60, t:"稳定外向", tags:["N 低","E 高"],
+    d:"积极情绪多、负面情绪少，抗压能力强。这是与主观幸福感关联最强的组合之一，在人际场合往往很有感染力。",
+    tip:"你的乐观可能让你低估风险或他人的担忧，重要的事情多听听谨慎派的意见。" },
+  { when:s => s.N >= 60 && s.E <= 40, t:"敏感内向", tags:["N 高","E 低"],
+    d:"情绪体验深，同时倾向于独自消化，容易内耗或在压力下退缩。",
+    tip:"维持一两个可以倾诉的支持性关系；运动和写作（把担心写下来）对这一组合尤其有帮助。" },
+  { when:s => s.E >= 60 && s.A >= 60, t:"热情协作者", tags:["E 高","A 高"],
+    d:"既外向又随和，是团队里天然的\"粘合剂\"，擅长营造氛围、促进合作。",
+    tip:"注意不要因为照顾气氛而回避必要的不同意见。" },
+  { when:s => s.E >= 60 && s.A <= 40, t:"强势主导者", tags:["E 高","A 低"],
+    d:"敢说、敢争、敢带头，偏竞争性的领导风格，推动事情的能力强。",
+    tip:"在推进过程中多留意他人的感受和意见，以免赢了事情却输了关系。" },
+  { when:s => s.O >= 60 && s.C <= 40, t:"创意发散型", tags:["O 高","C 低"],
+    d:"点子多、兴趣广，但容易\"开很多头、收很少尾\"。",
+    tip:"给自己设一个\"想法停车场\"记下新点子，同时只推进 1–2 个项目直到完成。" },
+  { when:s => s.O >= 60 && s.C >= 60, t:"自律的创新者", tags:["O 高","C 高"],
+    d:"既有探索欲，又有执行力，能把新想法真正落地，是研究、产品、创作类工作的理想组合。",
+    tip:"警惕同时承担过多有趣的项目而透支。" },
+  { when:s => s.O >= 60 && s.E <= 40, t:"内省思考者", tags:["O 高","E 低"],
+    d:"喜欢独自深入地思考、阅读和创作，内心世界丰富。",
+    tip:"适合需要深度专注的工作；可以通过写作等书面方式输出想法，让更多人看到你的思考。" },
+  { when:s => s.C >= 60 && s.O <= 40, t:"稳健执行者", tags:["C 高","O 低"],
+    d:"重视规则和既定流程，执行可靠、稳定，是组织中重要的\"压舱石\"。",
+    tip:"面对新方法时，可以先在小范围试点，降低对变化的不适。" },
+  { when:s => s.A >= 60 && s.E <= 40, t:"安静的支持者", tags:["A 高","E 低"],
+    d:"不张扬，但真诚可靠，愿意在幕后默默帮助他人。",
+    tip:"你的贡献可能不容易被看见，适当地让别人知道你做了什么。" },
+  { when:s => s.A >= 60 && s.N >= 60, t:"共情易累型", tags:["A 高","N 高"],
+    d:"很能感受他人的情绪，也容易被他人的情绪影响，加上难以拒绝，容易感到心累。",
+    tip:"练习情绪边界：\"我可以理解你的感受，但不需要替你承担。\"" },
+  { when:s => s.A <= 40 && s.C <= 40, t:"不拘规则型", tags:["A 低","C 低"],
+    d:"不太在意规则和他人期待，行事自由，但在组织和人际中可能更容易产生摩擦。",
+    tip:"在团队中明确几条自己一定会遵守的承诺，以积累信任。" },
+  { when:s => s.A >= 60 && s.C >= 60, t:"可靠的合作者", tags:["A 高","C 高"],
+    d:"友善且负责，答应的事情一定做到，是最受信任的伙伴类型之一。",
+    tip:"注意不要因为责任感和不好意思拒绝，而承担过多工作。" }
+];
+
+// ===================== 存储：localStorage + IndexedDB 双份 =====================
+const KEY = { progress:"big5.progress.v1", history:"big5.history.v1", meta:"big5.meta.v1", theme:"big5.theme", prefs:"big5.prefs.v1" };
+const ls = {
+  ok:false,
+  test(){ try { localStorage.setItem("big5.__t","1"); localStorage.removeItem("big5.__t"); this.ok = true; } catch (e) { this.ok = false; } return this.ok; },
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k){ try { localStorage.removeItem(k); } catch (e) {} }
+};
+// IndexedDB 在个别环境（部分 file:// 页面、隐私模式）下既不成功也不报错，统一加超时兜底
+const withTimeout = (p, ms, fallback) => Promise.race([p, new Promise(r => setTimeout(() => r(fallback), ms))]);
+const idb = {
+  db:null,
+  open(){ return withTimeout(this._open(), 1500, false); },
+  _open(){ return new Promise(res => {
+    try { const r = indexedDB.open("big5-test", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("kv");
+      r.onsuccess = () => { this.db = r.result; res(true); };
+      r.onerror = () => res(false); r.onblocked = () => res(false);
+    } catch (e) { res(false); } }); },
+  get(k){ return withTimeout(new Promise(res => { if (!this.db) return res(undefined);
+    try { const q = this.db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); } catch (e) { res(undefined); } }), 1500, undefined); },
+  set(k, v){ if (!this.db) return; try { this.db.transaction("kv","readwrite").objectStore("kv").put(v, k); } catch (e) {} },
+  del(k){ if (!this.db) return; try { this.db.transaction("kv","readwrite").objectStore("kv").delete(k); } catch (e) {} }
+};
+let HIST = [];          // 内存中的历史（唯一可信来源），写入时同步到两处存储
+let PROGRESS = null;
+let META = { opens:0, firstOpen:0, lastOpen:0 };
+let persisted = false;
+const validRec = h => h && h.id && Array.isArray(h.answers) && h.answers.length === 120 && h.answers.every(v => v >= 1 && v <= 5);
+function saveHistory(){ ls.set(KEY.history, HIST); idb.set(KEY.history, HIST); }
+function saveProgressStore(){ if (PROGRESS) { ls.set(KEY.progress, PROGRESS); idb.set(KEY.progress, PROGRESS); } else { ls.del(KEY.progress); idb.del(KEY.progress); } }
+async function initStorage(){
+  ls.test();
+  await idb.open();
+  // 历史：两处合并（按 id 去重），任一处被清空都能从另一处恢复
+  const a = ls.get(KEY.history, []), b = (await idb.get(KEY.history)) || [];
+  const map = new Map();
+  [...b, ...a].forEach(h => { if (validRec(h)) { const old = map.get(h.id); if (!old || (h.editedTs || h.ts) >= (old.editedTs || old.ts)) map.set(h.id, h); } });
+  HIST = [...map.values()].sort((x,y) => x.ts - y.ts);
+  saveHistory();
+  // 进度
+  const pa = ls.get(KEY.progress, null), pb = await idb.get(KEY.progress);
+  PROGRESS = [pa, pb].filter(p => p && Array.isArray(p.answers)).sort((x,y) => (y.updated || 0) - (x.updated || 0))[0] || null;
+  if (PROGRESS) saveProgressStore();
+  // 元数据：打开次数
+  const ma = ls.get(KEY.meta, null), mb = await idb.get(KEY.meta);
+  META = [ma, mb].filter(Boolean).sort((x,y) => (y.opens || 0) - (x.opens || 0))[0] || META;
+  META.opens = (META.opens || 0) + 1;
+  META.firstOpen = META.firstOpen || Date.now();
+  META.prevOpen = META.lastOpen || 0;
+  META.lastOpen = Date.now();
+  ls.set(KEY.meta, META); idb.set(KEY.meta, META);
+  // 申请持久化存储（浏览器允许时，存储空间紧张也不会被自动清除）
+  try { if (navigator.storage && navigator.storage.persist) persisted = await withTimeout((async () => (await navigator.storage.persisted()) || (await navigator.storage.persist()))(), 1500, false); } catch (e) {}
+}
+
+// ===================== 计分 =====================
+function score(answers){
+  const dom = {}, fac = {};
+  DOMAIN_ORDER.forEach(k => { dom[k] = 0; fac[k] = [0,0,0,0,0,0]; });
+  for (let i = 1; i <= 120; i++) {
+    const v = REVERSED.has(i) ? 6 - answers[i - 1] : answers[i - 1];
+    const d = DOMAIN_ORDER[(i - 1) % 5], f = Math.floor(((i - 1) % 30) / 5);
+    dom[d] += v; fac[d][f] += v;
+  }
+  const pomp = (raw, n) => Math.round((raw - n) / (4 * n) * 1000) / 10;
+  const r = { raw:{}, pct:{}, facetPct:{} };
+  DOMAIN_ORDER.forEach(k => { r.raw[k] = dom[k]; r.pct[k] = pomp(dom[k], 24); r.facetPct[k] = fac[k].map(x => pomp(x, 4)); });
+  r.code = (r.pct.E >= 50 ? "E" : "I") + (r.pct.O >= 50 ? "N" : "S") + (r.pct.A >= 50 ? "F" : "T") + (r.pct.C >= 50 ? "J" : "P") + "-" + (r.pct.N >= 50 ? "T" : "A");
+  return r;
+}
+const level = p => p >= 65 ? "hi" : p <= 35 ? "lo" : "mid";
+const LV = { hi:"偏高", mid:"中等", lo:"偏低" };
+
+// 作答质量
+function quality(rec){
+  const a = rec.answers, n = a.length;
+  const cnt = [0,0,0,0,0]; a.forEach(v => cnt[v - 1]++);
+  const maxShare = Math.max(...cnt) / n, midShare = cnt[2] / n;
+  const mean = a.reduce((s,v) => s + v, 0) / n;
+  // 最长连续相同选项
+  let run = 1, longest = 1; for (let i = 1; i < n; i++) { run = a[i] === a[i-1] ? run + 1 : 1; longest = Math.max(longest, run); }
+  // 同一子维度内正反向题的一致性：正向题均分 vs 反向题（原始）均分，二者都偏高说明可能"无论什么都同意"
+  let incons = 0, pairs = 0;
+  for (let d = 0; d < 5; d++) for (let f = 0; f < 6; f++) {
+    const items = []; for (let i = 1; i <= 120; i++) if ((i-1) % 5 === d && Math.floor(((i-1) % 30) / 5) === f) items.push(i);
+    const fw = items.filter(i => !REVERSED.has(i)), rv = items.filter(i => REVERSED.has(i));
+    if (!fw.length || !rv.length) continue;
+    const mf = fw.reduce((s,i) => s + a[i-1], 0) / fw.length, mr = rv.reduce((s,i) => s + a[i-1], 0) / rv.length;
+    pairs++; if ((mf >= 4 && mr >= 4) || (mf <= 2 && mr <= 2)) incons++;
+  }
+  const checks = [
+    { k:"用时", v:rec.durationMin ? `${rec.durationMin} 分钟` : "未记录", bad:rec.durationMin > 0 && rec.durationMin < 6, msg:"答题过快（少于 6 分钟），可能没有仔细阅读题目" },
+    { k:"最常用选项占比", v:`${(maxShare*100).toFixed(0)}%`, bad:maxShare >= 0.6, msg:"大部分题目选了同一个选项，结果的区分度会降低" },
+    { k:"\"适中\"占比", v:`${(midShare*100).toFixed(0)}%`, bad:midShare >= 0.5, msg:"一半以上的题目选了\"适中\"，各维度分数会向中间聚集" },
+    { k:"最长连续相同选项", v:`${longest} 题`, bad:longest >= 12, msg:"有很长一段连续选择了相同选项" },
+    { k:"正反向题矛盾", v:`${incons} / ${pairs} 个子维度`, bad:incons >= 5, msg:"多个子维度中，意思相反的题目都选了同意（或都选了不同意）" },
+    { k:"平均作答值", v:mean.toFixed(2), bad:mean >= 3.9 || mean <= 2.1, msg:mean >= 3.9 ? "整体倾向于选\"准确\"，可能存在默认同意的作答风格" : "整体倾向于选\"不准确\"" }
+  ];
+  return { checks, flags:checks.filter(c => c.bad) };
+}
+
+// ===================== 通用 =====================
+const $ = id => document.getElementById(id);
+const views = ["v-home","v-quiz","v-result"];
+function show(v){ views.forEach(x => $(x).classList.toggle("hidden", x !== v)); window.scrollTo(0,0); }
+function toast(m){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 1800); }
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pad = n => String(n).padStart(2,"0");
+const fmtDate = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtDay = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const charts = {};
+function mkChart(id, opt){ if (charts[id]) charts[id].dispose(); if (!window.echarts) { $(id).innerHTML = `<p class="muted small" style="padding:20px;text-align:center">图表库加载失败（需要联网），不影响文字报告。</p>`; return; } charts[id] = echarts.init($(id)); charts[id].setOption(opt); }
+const prefs = Object.assign({ autoAdv:true, showEn:false }, ls.get(KEY.prefs, {}));
+const savePrefs = () => ls.set(KEY.prefs, prefs);
+
+// ===================== 首页 =====================
+function renderHome(){
+  $("dimIntro").innerHTML = DOMAIN_ORDER.map(k => `<div class="dim" style="--c:var(--${k})"><b>${DOMAINS[k].name} ${k}</b><span class="muted small">${DOMAINS[k].en} · ${DOMAINS[k].sub}</span></div>`).join("");
+  const answered = PROGRESS ? PROGRESS.answers.filter(Boolean).length : 0;
+  $("resumeBtn").classList.toggle("hidden", !answered);
+  $("resumeBtn").textContent = PROGRESS && PROGRESS.editId ? "继续修改答案" : "继续上次的进度";
+  $("resumeInfo").textContent = answered ? `${PROGRESS.editId ? "修改中" : "已答"} ${answered} / 120 题${PROGRESS.nick ? "（" + PROGRESS.nick + "）" : ""}` : "";
+  $("startBtn").textContent = answered && !PROGRESS.editId ? "重新开始" : "开始测试";
+
+  // 存储状态
+  const parts = [];
+  parts.push(ls.ok ? "localStorage ✓" : "localStorage ✗");
+  parts.push(idb.db ? "IndexedDB ✓" : "IndexedDB ✗");
+  if (persisted) parts.push("持久化 ✓");
+  const good = ls.ok || idb.db;
+  $("storeStatus").innerHTML = `<span class="${good ? "store-ok" : "store-warn"}">${good ? "本地存储可用" : "本地存储不可用（可能处于无痕模式）"}</span> <span class="muted">· ${parts.join(" · ")}</span>`;
+
+  // 统计
+  const last = HIST[HIST.length - 1];
+  const stats = [
+    { v:HIST.length, l:"本机已完成测试" },
+    { v:HIST.length ? fmtDay(HIST[0].ts) : "—", l:"首次测试" },
+    { v:last ? fmtDay(last.ts) : "—", l:"最近一次测试" },
+    { v:META.opens, l:"本页打开次数" }
+  ];
+  $("stats").innerHTML = stats.map(s => `<div class="stat"><div class="v">${s.v}</div><div class="l">${s.l}</div></div>`).join("");
+
+  $("histEmpty").classList.toggle("hidden", HIST.length > 0);
+  $("hlist").innerHTML = HIST.slice().reverse().map((h, i) => {
+    const r = score(h.answers);
+    return `<div class="hitem" data-view="${h.id}">
+      <div class="idx">#${HIST.length - i}</div>
+      <div class="main"><div class="t">${esc(h.nick || "未命名")} <span class="muted small">${fmtDate(h.ts)}${h.editedTs ? " · 已修改" : ""}</span></div>
+        <div class="bars">${DOMAIN_ORDER.map(k => `<span style="--c:var(--${k})" title="${DOMAINS[k].name} ${r.pct[k].toFixed(0)}"><i style="width:${r.pct[k]}%"></i></span>`).join("")}</div>
+        <div class="muted small">${DOMAIN_ORDER.map(k => `${k} ${r.pct[k].toFixed(0)}`).join(" · ")}</div></div>
+      <div class="code">${r.code}</div></div>`;
+  }).join("");
+
+  // 趋势
+  $("trendWrap").classList.toggle("hidden", HIST.length < 2);
+  if (HIST.length >= 2) {
+    const text = css("--text"), muted = css("--muted"), line = css("--line"), card = css("--card");
+    mkChart("trend", {
+      textStyle:{ color:text, fontFamily:"inherit" },
+      tooltip:{ trigger:"axis", backgroundColor:card, borderColor:line, textStyle:{ color:text } },
+      legend:{ top:0, textStyle:{ color:text } },
+      grid:{ left:8, right:16, top:34, bottom:8, containLabel:true },
+      xAxis:{ type:"category", data:HIST.map((h,i) => `#${i+1}\n${fmtDay(h.ts).slice(5)}`), axisLabel:{ color:muted }, axisLine:{ lineStyle:{ color:line } } },
+      yAxis:{ type:"value", min:0, max:100, axisLabel:{ color:muted }, splitLine:{ lineStyle:{ color:line, type:"dashed" } } },
+      series:DOMAIN_ORDER.map(k => ({ name:DOMAINS[k].name, type:"line", symbolSize:7, itemStyle:{ color:css("--" + k) }, lineStyle:{ color:css("--" + k) },
+        data:HIST.map(h => score(h.answers).pct[k]) }))
+    });
+  }
+}
+$("hlist").addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (b) openResult(b.dataset.view); });
+
+// ===================== 答题 =====================
+function startQuiz(p){
+  PROGRESS = p; saveProgressStore();
+  $("opts").innerHTML = OPTIONS.map((t,i) => `<button class="opt" data-v="${i+1}"><span class="n">${i+1}</span><span class="t">${t}</span></button>`).join("");
+  $("grid120").innerHTML = ITEMS.map((_,i) => `<button data-i="${i}" aria-label="第 ${i+1} 题"></button>`).join("");
+  $("autoAdv").checked = prefs.autoAdv; $("showEnChk").checked = prefs.showEn;
+  show("v-quiz"); renderQ();
+}
+function persistProgress(){ PROGRESS.updated = Date.now(); saveProgressStore(); }
+function renderQ(){
+  const p = PROGRESS, i = p.cur, a = p.answers[i];
+  const done = p.answers.filter(Boolean).length;
+  $("qMode").textContent = p.editId ? "修改答案模式（完成后会更新原结果）" : `已答 ${done} / 120`;
+  $("qSaved").textContent = (ls.ok || idb.db) ? "✓ 进度自动保存" : "⚠ 存储不可用，刷新会丢失进度";
+  $("qBar").style.width = (done / 120 * 100) + "%";
+  const changed = p.orig && p.orig[i] && p.orig[i] !== a;
+  $("qNo").innerHTML = `第 ${i + 1} 题${changed ? ` <span class="edited">（已修改，原选 ${p.orig[i]}）</span>` : ""}`;
+  $("qText").textContent = ITEMS[i][0];
+  $("qEn").textContent = prefs.showEn ? ITEMS[i][1] : "";
+  $("qPos").innerHTML = `${i + 1} / 120<br><span class="small">${a ? "已答：" + OPTIONS[a-1] : "未作答"}</span>`;
+  document.querySelectorAll("#opts .opt").forEach(b => b.classList.toggle("on", +b.dataset.v === a));
+  $("prevBtn").disabled = i === 0;
+  $("nextBtn").disabled = i === 119;
+  document.querySelectorAll("#grid120 button").forEach((b,k) => { b.classList.toggle("done", !!p.answers[k]); b.classList.toggle("cur", k === i); });
+  $("finishBtn").disabled = done < 120;
+  $("finishBtn").textContent = done < 120 ? `查看结果（还剩 ${120 - done} 题）` : (p.editId ? "保存修改并查看结果" : "查看结果");
+}
+let advTimer;
+function answer(v){
+  const p = PROGRESS, wasEmpty = !p.answers[p.cur];
+  p.answers[p.cur] = v; persistProgress(); renderQ();
+  clearTimeout(advTimer);
+  // 只有"新作答"才自动跳题；回头修改已答的题时停留在当前题，避免误跳
+  if (wasEmpty && prefs.autoAdv) advTimer = setTimeout(() => {
+    if (p.cur < 119) { p.cur++; persistProgress(); renderQ(); }
+    else if (p.answers.every(Boolean)) toast("全部作答完成，可以查看结果了");
+  }, 230);
+  else if (!wasEmpty) toast("已修改");
+}
+function go(d){ const n = PROGRESS.cur + d; if (n < 0 || n > 119) return; clearTimeout(advTimer); PROGRESS.cur = n; persistProgress(); renderQ(); }
+$("opts").addEventListener("click", e => { const b = e.target.closest(".opt"); if (b) answer(+b.dataset.v); });
+$("grid120").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; clearTimeout(advTimer); PROGRESS.cur = +b.dataset.i; persistProgress(); renderQ(); window.scrollTo({ top:0, behavior:"smooth" }); });
+$("prevBtn").onclick = () => go(-1);
+$("nextBtn").onclick = () => go(1);
+$("autoAdv").onchange = e => { prefs.autoAdv = e.target.checked; savePrefs(); };
+$("showEnChk").onchange = e => { prefs.showEn = e.target.checked; savePrefs(); renderQ(); };
+$("jumpBtn").onclick = () => {
+  const a = PROGRESS.answers;
+  let m = a.findIndex((x,k) => !x && k > PROGRESS.cur); if (m < 0) m = a.findIndex(x => !x);
+  if (m < 0) { toast("已全部作答"); return; }
+  PROGRESS.cur = m; persistProgress(); renderQ();
+};
+$("finishBtn").onclick = () => finish();
+document.addEventListener("keydown", e => {
+  if ($("v-quiz").classList.contains("hidden") || e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.key >= "1" && e.key <= "5") answer(+e.key);
+  else if (e.key === "ArrowLeft") go(-1);
+  else if (e.key === "ArrowRight") go(1);
+});
+// 手机左右滑动切题
+(() => { let x0 = null, y0 = null;
+  $("v-quiz").addEventListener("touchstart", e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; }, { passive:true });
+  $("v-quiz").addEventListener("touchend", e => { if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1); x0 = null; }, { passive:true });
+})();
+
+function finish(){
+  const p = PROGRESS;
+  if (!p.answers.every(Boolean)) { toast("还有题目未作答"); return; }
+  let rec;
+  if (p.editId) {
+    rec = HIST.find(h => h.id === p.editId);
+    if (rec) { rec.answers = p.answers.slice(); rec.editedTs = Date.now(); }
+  }
+  if (!rec) {
+    rec = { id:"r" + Date.now().toString(36), ts:Date.now(), nick:p.nick || "", answers:p.answers.slice(), durationMin:Math.max(1, Math.round((Date.now() - p.started) / 60000)) };
+    HIST.push(rec);
+  }
+  saveHistory();
+  PROGRESS = null; saveProgressStore();
+  if (!ls.ok && !idb.db) toast("浏览器存储不可用，本次结果在关闭页面后会丢失");
+  openResult(rec.id);
+}
+
+// ===================== 结果 =====================
+let curRec = null;
+function openResult(id){
+  const rec = HIST.find(h => h.id === id);
+  if (!rec) { toast("找不到这条结果"); return; }
+  curRec = rec;
+  const r = score(rec.answers);
+  show("v-result");
+  const idx = HIST.indexOf(rec) + 1;
+  $("rTitle").textContent = rec.nick ? `${rec.nick} 的大五人格报告` : "大五人格报告";
+  $("rMeta").textContent = `本机第 ${idx} 次测试 · ${fmtDate(rec.ts)}${rec.editedTs ? ` · 修改于 ${fmtDate(rec.editedTs)}` : ""}${rec.durationMin ? ` · 用时约 ${rec.durationMin} 分钟` : ""}`;
+  $("rCode").textContent = r.code;
+
+  // 总结
+  const ranked = DOMAIN_ORDER.map(k => ({ k, p:r.pct[k], lv:level(r.pct[k]) })).sort((a,b) => Math.abs(b.p - 50) - Math.abs(a.p - 50));
+  const notable = ranked.filter(x => x.lv !== "mid");
+  const midOnes = ranked.filter(x => x.lv === "mid");
+  const kw = { N:{ hi:"情绪敏感、警觉", lo:"情绪稳定、抗压" }, E:{ hi:"外向、有活力", lo:"内敛、偏好独处" }, O:{ hi:"好奇、富有想象", lo:"务实、重视经验" }, A:{ hi:"随和、乐于合作", lo:"独立、有竞争性" }, C:{ hi:"自律、有条理", lo:"随性、灵活" } };
+  $("rSummary").innerHTML = notable.length
+    ? `<b>一句话概括：</b>你的人格轮廓中最鲜明的特点是 ${notable.map(x => `<b style="color:var(--${x.k})">${DOMAINS[x.k].name}${LV[x.lv]}（${x.p.toFixed(0)}）</b>`).join("、")}，即${notable.map(x => kw[x.k][x.lv]).join("、")}。${midOnes.length ? `${midOnes.map(x => DOMAINS[x.k].name).join("、")}处于中等区间。` : ""}`
+    : `<b>一句话概括：</b>五个维度都处于中等区间（35–65），属于比较均衡的人格轮廓，能根据不同情境灵活调整。最接近两端的是${DOMAINS[ranked[0].k].name}（${ranked[0].p.toFixed(0)}）。`;
+
+  // 对比下拉
+  const others = HIST.filter(h => h.id !== rec.id);
+  $("cmpSel").innerHTML = `<option value="">不对比</option>` + others.slice().reverse().map(h => `<option value="${h.id}">#${HIST.indexOf(h)+1} ${fmtDay(h.ts)} ${esc(h.nick || "")}</option>`).join("");
+  $("cmpSel").onchange = renderResultCharts;
+
+  renderLearn();
+  renderDomains(r);
+  renderHighlights(r);
+  renderCombos(r);
+  renderQuality(rec);
+  renderResultCharts();
+}
+
+function renderLearn(){
+  $("learnCard").innerHTML = `<h2>认识大五人格</h2>
+  <p class="muted small" style="margin:0 0 6px">先花两分钟了解这个模型，有助于更准确地理解你的结果。</p>
+  <details class="learn" open><summary>什么是大五人格？</summary><div class="body">
+    <p>大五人格（Big Five / 五因素模型）是当代人格心理学中<b>研究证据最充分</b>的人格结构模型。它源于"词汇假设"：对人类重要的性格差异，会在语言里沉淀为大量描述性词汇。研究者对成千上万个形容词做统计分析（因素分析），在不同语言和文化中反复得到大致相同的五个维度：<b>神经质、外向性、开放性、宜人性、尽责性</b>（常用英文首字母缩写为 OCEAN）。</p>
+    <p>每个维度都是一条<b>连续的光谱</b>，不是非此即彼的"类型"。大多数人处在中间区域，两端的人相对较少。每个维度下又有 6 个更细的子维度，本测试共测量 30 个子维度。</p>
+  </div></details>
+  <details class="learn"><summary>人格会变吗？</summary><div class="body">
+    <p>成年后的人格<b>相对稳定，但并非一成不变</b>。纵向研究发现了所谓的"成熟原则"：随着年龄增长，多数人的尽责性和宜人性会缓慢上升，神经质会下降。重大的生活经历（如工作、伴侣关系）和有意识的练习，也会带来可观察的变化。</p>
+    <p>双生子研究显示，人格的个体差异中大约有 40–50% 与遗传有关，其余来自环境和个人经历。所以人格既有"底色"，也有塑造的空间。</p>
+  </div></details>
+  <details class="learn"><summary>大五人格能预测什么？</summary><div class="body">
+    <p>大量研究表明，大五人格与许多重要的人生结果有关（以下都是群体层面的统计关联，个体之间差异很大）：</p>
+    <ul style="margin:4px 0;padding-left:18px">
+      <li><b style="color:var(--C)">尽责性</b>：工作绩效和学业成绩最稳定的人格预测因素，也与健康行为和寿命相关。</li>
+      <li><b style="color:var(--N)">神经质</b>：与心理健康、主观幸福感和压力反应关联最强。</li>
+      <li><b style="color:var(--E)">外向性</b>：与积极情绪、社交网络、领导力的涌现相关。</li>
+      <li><b style="color:var(--A)">宜人性</b>：与人际关系质量、团队合作和亲社会行为相关。</li>
+      <li><b style="color:var(--O)">开放性</b>：与创造力、学习兴趣和对变化的接纳相关。</li>
+    </ul>
+    <p>综合来看，人格对职业成就、婚姻稳定性和寿命等结果的预测力，与家庭社会经济地位、认知能力处于相近的量级。不过对个人而言，人格只是众多影响因素之一，<b>不决定命运</b>。</p>
+  </div></details>
+  <details class="learn"><summary>和 MBTI / 16Personalities 有什么区别？</summary><div class="body">
+    <p>MBTI 把人分成 16 种"类型"，大五人格则给出 5 个维度上的<b>连续分数</b>。学术界普遍认为大五人格的信度（重测是否一致）和效度（能否预测现实行为）证据更充分。两者有大致的对应关系：</p>
+    <table class="mapping"><tr><th>MBTI 维度</th><th>大致对应的大五维度</th></tr>
+      <tr><td>E 外向 / I 内向</td><td>外向性</td></tr>
+      <tr><td>N 直觉 / S 实感</td><td>开放性</td></tr>
+      <tr><td>F 情感 / T 思考</td><td>宜人性</td></tr>
+      <tr><td>J 判断 / P 知觉</td><td>尽责性</td></tr>
+      <tr><td>（MBTI 没有）16P 的 -T 敏感 / -A 自信</td><td>神经质</td></tr></table>
+    <p>MBTI 缺少与"神经质"对应的维度，16Personalities 额外加上了 A/T 来弥补。本页顶部给出的代码就是按上表换算得到的近似值。</p>
+  </div></details>
+  <details class="learn"><summary>如何看待自己的分数？</summary><div class="body">
+    <p>1）<b>没有好坏之分</b>：每个维度的高分和低分都各有优势和代价，关键在于和环境、角色是否匹配。</p>
+    <p>2）<b>看相对位置，不要盯着小数点</b>：几分之差通常没有实际意义，更值得关注的是哪些维度明显偏高或偏低。</p>
+    <p>3）<b>子维度比总分更具体</b>：同一维度下的子维度可能差异很大，例如外向性中等，但"友善"很高、"合群"很低。</p>
+    <p>4）<b>结果是"自我描述"的快照</b>：它反映你此刻如何看待自己，会受到心情和处境的影响。可以隔几个月再测一次，看看哪些特点稳定、哪些在变化。</p>
+  </div></details>`;
+}
+
+function renderDomains(r){
+  $("domainCards").innerHTML = `<h2>你的五维详解</h2>` + DOMAIN_ORDER.map(k => {
+    const d = DOMAINS[k], p = r.pct[k], lv = level(p), c = d[lv];
+    const fps = r.facetPct[k];
+    const fmax = Math.max(...fps), fmin = Math.min(...fps);
+    const spread = fmax - fmin >= 40
+      ? `<div class="spread">🔍 <b>内部差异较大：</b>${d.facets[fps.indexOf(fmax)][0]}（${fmax.toFixed(0)}）明显高于${d.facets[fps.indexOf(fmin)][0]}（${fmin.toFixed(0)}）。这说明单看${d.name}总分会掩盖一些细节，请结合下面的子维度来理解。</div>` : "";
+    return `<div class="domain" style="--c:var(--${k})">
+      <div class="hd"><span class="nm">${d.name} <span class="muted small">${d.en}</span></span>
+        <span class="sc"><b style="font-size:18px">${p.toFixed(0)}</b> / 100<span class="lvl">${LV[lv]}</span></span></div>
+      <div class="meter"><i style="width:${p}%"></i><b style="left:35%"></b><b style="left:65%"></b></div>
+      <div class="scale"><span>偏低</span><span>中等</span><span>偏高</span></div>
+      <p class="def small"><b>是什么：</b>${d.def}</p>
+      <p class="small muted" style="margin:4px 0"><b>为什么重要：</b>${d.why}</p>
+      <div class="you"><b>你的情况：</b>${c.sum}</div>
+      <div class="cols">
+        <div><h4>✅ 优势</h4><ul>${c.str.map(x => `<li>${x}</li>`).join("")}</ul></div>
+        <div><h4>⚠️ 需要留意</h4><ul>${c.watch.map(x => `<li>${x}</li>`).join("")}</ul></div>
+        <div><h4>💡 建议</h4><ul>${c.tips.map(x => `<li>${x}</li>`).join("")}</ul></div>
+      </div>
+      <div class="facets">${d.facets.map((f,j) => { const fp = fps[j], fl = level(fp);
+        return `<div class="facet"><div class="fh"><span><b>${f[0]}</b></span><span>${fp.toFixed(0)} <span class="muted">${LV[fl]}</span></span></div>
+          <div class="fm"><i style="width:${fp}%"></i></div>
+          <div class="fd">${fl === "hi" ? f[2] : fl === "lo" ? f[3] : "测量：" + f[1]}</div></div>`; }).join("")}</div>
+      ${spread}
+    </div>`;
+  }).join("");
+}
+
+function renderHighlights(r){
+  const all = [];
+  DOMAIN_ORDER.forEach(k => DOMAINS[k].facets.forEach((f,j) => all.push({ k, name:f[0], p:r.facetPct[k][j], hi:f[2], lo:f[3] })));
+  const sorted = all.slice().sort((a,b) => b.p - a.p);
+  const top = sorted.slice(0,4), bot = sorted.slice(-4).reverse();
+  const item = (x, txt) => `<div class="it" style="--c:var(--${x.k})"><b>${x.name}</b> <span class="muted">· ${DOMAINS[x.k].name} · ${x.p.toFixed(0)} 分</span><br>${txt}</div>`;
+  $("highlights").innerHTML = `<h2>最突出的子维度</h2>
+    <p class="muted small" style="margin:0 0 6px">子维度比五大维度更具体，最高分和最低分的几项往往最能代表"你和别人不一样的地方"。注意：神经质下的子维度高分表示该方面的负面情绪更多。</p>
+    <div class="hl"><div><h3>得分最高</h3>${top.map(x => item(x, x.hi)).join("")}</div>
+    <div><h3>得分最低</h3>${bot.map(x => item(x, x.lo)).join("")}</div></div>`;
+}
+
+function renderCombos(r){
+  const s = r.pct;
+  const hits = COMBOS.filter(c => c.when(s));
+  $("combos").innerHTML = `<h2>维度组合解读</h2>
+    <p class="muted small" style="margin:0 0 6px">人格维度不是孤立起作用的，两个维度的组合往往比单个维度更能说明一个人的行为模式（以 60 / 40 分为界判断）。</p>` +
+    (hits.length ? hits.map(c => `<div class="combo"><div><b>${c.t}</b> ${c.tags.map(t => `<span class="tg">${t}</span>`).join("")}</div>
+      <p class="small" style="margin:6px 0 4px">${c.d}</p><p class="small muted" style="margin:0">💡 ${c.tip}</p></div>`).join("")
+    : `<div class="combo"><b>均衡型轮廓</b><p class="small" style="margin:6px 0 0">你的五个维度没有出现明显的高低组合（都在 40–60 之间），这意味着你的行为更多取决于具体情境，而不是被某一种倾向主导。这种灵活性是优势，但也可能让你在需要鲜明风格时显得"不够突出"。</p></div>`);
+}
+
+function renderQuality(rec){
+  const q = quality(rec);
+  const ok = !q.flags.length;
+  $("quality").innerHTML = `<h2>作答质量检查 <span class="small" style="color:var(--${ok ? "ok" : "warn"})">${ok ? "✓ 良好" : "⚠ 需留意"}</span></h2>
+    <p class="muted small" style="margin:0 0 8px">专业测评通常会检查作答方式，以判断结果是否可信。以下指标仅供参考。</p>
+    <div class="qa">${q.checks.map(c => `<div class="it"><span class="muted">${c.k}</span><b style="color:var(--${c.bad ? "warn" : "text"})">${c.v}</b></div>`).join("")}</div>
+    ${q.flags.length ? `<ul class="small" style="margin:10px 0 0;padding-left:18px">${q.flags.map(f => `<li>${f.msg}</li>`).join("")}</ul><p class="small muted" style="margin:6px 0 0">建议在状态平稳时，认真重新作答一次，或使用"修改答案"逐题检查。</p>`
+      : `<p class="small" style="margin:10px 0 0">没有发现明显的随意作答迹象，结果的可信度较好。</p>`}`;
+}
+
+function renderResultCharts(){
+  if (!curRec || $("v-result").classList.contains("hidden")) return;
+  const r = score(curRec.answers);
+  const text = css("--text"), muted = css("--muted"), line = css("--line"), card = css("--card"), accent = css("--accent");
+  const cmpId = $("cmpSel").value;
+  const cmpRec = cmpId ? HIST.find(h => h.id === cmpId) : null;
+  const cr = cmpRec ? score(cmpRec.answers) : null;
+  const data = [{ name:"本次", value:DOMAIN_ORDER.map(k => r.pct[k]), areaStyle:{ opacity:.2 }, lineStyle:{ color:accent, width:2 }, itemStyle:{ color:accent },
+    label:{ show:true, color:text, formatter:p => p.value.toFixed(0) } }];
+  if (cr) data.push({ name:`#${HIST.indexOf(cmpRec)+1} ${fmtDay(cmpRec.ts)}`, value:DOMAIN_ORDER.map(k => cr.pct[k]), lineStyle:{ type:"dashed", color:muted, width:1.5 }, itemStyle:{ color:muted }, areaStyle:{ opacity:.05 } });
+  mkChart("radar", {
+    textStyle:{ color:text, fontFamily:"inherit" },
+    tooltip:{ backgroundColor:card, borderColor:line, textStyle:{ color:text } },
+    legend:{ show:!!cr, bottom:0, textStyle:{ color:text } },
+    radar:{ radius:"64%", center:["50%","50%"], splitNumber:4,
+      indicator:DOMAIN_ORDER.map(k => ({ name:DOMAINS[k].name, max:100, color:css("--" + k) })),
+      axisName:{ fontWeight:"bold", fontSize:14 }, splitLine:{ lineStyle:{ color:line } }, splitArea:{ show:false }, axisLine:{ lineStyle:{ color:line } } },
+    series:[{ type:"radar", symbolSize:6, data }]
+  });
+  const cats = [], vals = [], cvals = [];
+  DOMAIN_ORDER.forEach(k => DOMAINS[k].facets.forEach((f,j) => {
+    cats.push(`${k}${j+1} ${f[0]}`);
+    vals.push({ value:r.facetPct[k][j], itemStyle:{ color:css("--" + k), borderRadius:[0,4,4,0] } });
+    if (cr) cvals.push(cr.facetPct[k][j]);
+  }));
+  mkChart("facetChart", {
+    textStyle:{ color:text, fontFamily:"inherit" },
+    tooltip:{ trigger:"axis", axisPointer:{ type:"shadow" }, backgroundColor:card, borderColor:line, textStyle:{ color:text } },
+    legend:{ show:!!cr, top:0, textStyle:{ color:text } },
+    grid:{ left:8, right:34, top:cr ? 30 : 8, bottom:8, containLabel:true },
+    xAxis:{ type:"value", min:0, max:100, axisLabel:{ color:muted }, splitLine:{ lineStyle:{ color:line, type:"dashed" } } },
+    yAxis:{ type:"category", inverse:true, data:cats, axisTick:{ show:false }, axisLine:{ lineStyle:{ color:line } }, axisLabel:{ color:text, fontSize:12 } },
+    series:[
+      { name:"本次", type:"bar", barMaxWidth:14, data:vals, label:{ show:true, position:"right", color:muted, fontSize:11, formatter:p => p.value.toFixed(0) },
+        markLine:{ silent:true, symbol:"none", lineStyle:{ color:muted, type:"dotted" }, label:{ show:false }, data:[{ xAxis:35 },{ xAxis:65 }] } },
+      ...(cr ? [{ name:`#${HIST.indexOf(cmpRec)+1} ${fmtDay(cmpRec.ts)}`, type:"scatter", symbol:"diamond", symbolSize:10, itemStyle:{ color:text }, data:cvals }] : [])
+    ]
+  });
+}
+
+// ===================== 按钮 =====================
+const goHome = () => { renderHome(); show("v-home"); };
+$("backHome").onclick = goHome;
+$("homeLink").onclick = () => { if (!$("v-quiz").classList.contains("hidden")) toast("进度已保存，可在首页继续"); goHome(); };
+$("retakeBtn").onclick = () => { $("nick").value = curRec ? curRec.nick : ""; goHome(); };
+$("printBtn").onclick = () => { document.querySelectorAll("details.learn").forEach(d => d.open = true); setTimeout(() => window.print(), 100); };
+$("editBtn").onclick = () => {
+  if (!curRec) return;
+  if (PROGRESS && PROGRESS.answers.some(Boolean) && !confirm("当前有未完成的答题进度，修改答案会覆盖它，确定继续吗？")) return;
+  startQuiz({ editId:curRec.id, answers:curRec.answers.slice(), orig:curRec.answers.slice(), cur:0, nick:curRec.nick, started:Date.now() });
+  toast("可以用上一题 / 下一题或小方格逐题修改");
+};
+$("delBtn").onclick = () => {
+  if (!curRec || !confirm("确定删除这条结果吗？此操作不可撤销。")) return;
+  HIST = HIST.filter(h => h.id !== curRec.id); saveHistory();
+  curRec = null; goHome(); toast("已删除");
+};
+$("startBtn").onclick = () => {
+  if (PROGRESS && PROGRESS.answers.some(Boolean) && !confirm("将清空当前未完成的进度，确定重新开始吗？")) return;
+  startQuiz({ answers:Array(120).fill(0), cur:0, nick:$("nick").value.trim(), started:Date.now() });
+};
+$("resumeBtn").onclick = () => { if (PROGRESS) startQuiz(PROGRESS); };
+
+$("exportBtn").onclick = () => {
+  if (!HIST.length) { toast("没有可导出的结果"); return; }
+  const blob = new Blob([JSON.stringify({ format:"big5-ipip-neo-120", version:2, exported:new Date().toISOString(), history:HIST }, null, 2)], { type:"application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `大五人格-备份-${fmtDay(Date.now())}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$("importFile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const list = (JSON.parse(rd.result).history || []).filter(validRec);
+      const ids = new Set(HIST.map(h => h.id)); let n = 0;
+      list.forEach(h => { if (!ids.has(String(h.id))) { HIST.push({ id:String(h.id), ts:+h.ts || Date.now(), editedTs:+h.editedTs || 0, nick:String(h.nick || "").slice(0,20), answers:h.answers.map(Number), durationMin:+h.durationMin || 0 }); n++; } });
+      HIST.sort((a,b) => a.ts - b.ts); saveHistory(); renderHome(); toast(`已导入 ${n} 条结果`);
+    } catch (err) { toast("文件格式不正确"); }
+    e.target.value = "";
+  };
+  rd.readAsText(f);
+};
+
+// ===================== 主题 & 启动 =====================
+const root = document.documentElement;
+try { const t = localStorage.getItem(KEY.theme); if (t) root.dataset.theme = t; } catch (e) {}
+const rerender = () => { if (!$("v-result").classList.contains("hidden")) renderResultCharts(); if (!$("v-home").classList.contains("hidden")) renderHome(); };
+$("themeBtn").onclick = () => {
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem(KEY.theme, root.dataset.theme); } catch (e) {}
+  rerender();
+};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (!root.dataset.theme) rerender(); });
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => Object.values(charts).forEach(c => c && c.resize && c.resize()), 120); });
+// 关闭或切到后台前再保存一次
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && PROGRESS) saveProgressStore(); });
+
+initStorage().catch(() => {}).then(renderHome);
+</script>
+</body>
+</html>
